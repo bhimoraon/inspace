@@ -1,10 +1,16 @@
 import LeftMenu from "@/components/LeftMenu";
 import Post from "@/components/Post";
 import RightMenu from "@/components/RightMenu";
+import { getUser } from "@/lib/lucia";
+import { DashIcon } from "@radix-ui/react-icons";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import React from "react";
 
-function profilePage({ params }: any) {
+async function profilePage({ params }: any) {
+	const user = await getUser();
+	if(!user)
+		redirect("/authenticate");
 	return (
 		<div className="flex gap-6  ">
 			<div className="hidden xl:block w-[20%]  border-gray-500 barWidth border-r-[1px]  ">

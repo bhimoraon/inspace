@@ -46,8 +46,16 @@ export const signUp = async (values: z.infer<typeof signUpSchema>) => {
             password: values.password
 
         }
-        const token = await jwt.sign(takenData, "RohanKachhap", {});
-        cookies().set("userInfo", token, { httpOnly: true });
+
+        try {
+            const token = await jwt.sign(takenData, "RohanKachhap", {});
+
+            cookies().set("userInfo", token, {
+                httpOnly: true,
+            });
+        } catch (error) {
+            console.error("Error signing JWT:", error);
+        }
 
 
         const session = await lucia.createSession(user.id, {});

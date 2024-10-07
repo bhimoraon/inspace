@@ -7,8 +7,8 @@ import { ThemeProvider} from "next-themes";
 
 const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
-	title: "Nxxt",
-	description: "Social media app built with Next.jws",
+	title: "Inspace",
+	description: "Social media app built with Next.js",
 };
 
 export default function RootLayout({

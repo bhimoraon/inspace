@@ -14,15 +14,27 @@ async function page() {
 	if (user) {
 		return redirect("/");
 	}
+
 	const token = cookies().get("userInfo")?.value || null;
 	let userInfo;
-	jwt.verify(token!, "RohanKachhap", (err, decoded) => {
-		if (err) console.log(err);
-		else {
-			userInfo = decoded;
-			console.log(userInfo);
+	if (token) {
+		try {
+			userInfo = await jwt.verify(token, "RohanKachhap");
+
+			console.log(userInfo); // Successfully decoded token
+		} catch (error) {
+			console.log("JWT verification failed:", error);
 		}
-	});
+	} else {
+		console.log("No token exist ");
+	}
+	// 	, (err, decoded) => {
+	// 	if (err) console.log(err);
+	// 	else {
+	// 		userInfo = decoded;
+	// 		console.log(userInfo);
+	// 	}
+	// });
 
 	return (
 		<div className=" h-screen w-full flex  relative  ">
