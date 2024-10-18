@@ -7,7 +7,7 @@ const adapter = new PrismaAdapter(prisma.session, prisma.user)
 
 export const lucia = new Lucia(adapter, {
     sessionCookie: {
-        name: 'sessionid',
+        name: 'session',
         expires: false,
         attributes: {
             secure: process.env.NODE_ENV === 'production'
@@ -20,12 +20,14 @@ export const getUser = async () => {
     if (!sessionId) {
         return null
     }
-    const { session, user } = await lucia.validateSession(sessionId)
     try {
+        const { session, user } = await lucia.validateSession(sessionId)
         if (session && session.fresh) {
             // refreshing their session cookie
             const sessionCookie = await lucia.createSessionCookie(session.id)
             cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes)
+
+
         }
         if (!session) {
             const sessionCookie = await lucia.createBlankSessionCookie()
@@ -36,6 +38,20 @@ export const getUser = async () => {
         const dbUser = await prisma.user.findUnique({
             where: {
                 id: user?.id
+            },
+            include: {
+                _count: {
+                    select: {
+                        followings: true,
+                        posts: true,
+                        followers: true
+
+                    },
+
+
+                },
+
+
             }
         })
         return dbUser

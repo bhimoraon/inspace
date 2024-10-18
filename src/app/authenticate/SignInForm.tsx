@@ -26,19 +26,24 @@ import { signIn } from "./auth.action";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import GoogleOAuthButton from "@/components/GoogleOAuthButton";
+import { useFormStatus } from "react-dom";
+
 
 export const signInSchema = z.object({
-	email: z.string().email(),
-	password: z.string().min(8, "Password must contain at least 8 character(s)"),
+    username: z.string().toLowerCase().trim().min(3),
+    // trim removes the whitespace in beggining and ending
+    password: z.string().min(8),
 });
 
 function SignInForm() {
 	const router = useRouter();
+	const { pending } = useFormStatus();
+
 	// 1. Define your form.
 	const form = useForm<z.infer<typeof signInSchema>>({
 		resolver: zodResolver(signInSchema),
 		defaultValues: {
-			email: "",
+			username: "",
 			password: "",
 		},
 	});
@@ -71,12 +76,12 @@ function SignInForm() {
 						>
 							<FormField
 								control={form.control}
-								name="email"
+								name="username"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Email</FormLabel>
+										<FormLabel>Email or username</FormLabel>
 										<FormControl>
-											<Input type="email" placeholder="Email" {...field} />
+											<Input  placeholder="Email or username" {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -104,9 +109,9 @@ function SignInForm() {
 									</FormItem>
 								)}
 							/>
-							<Button type="submit" className="self-start">
-								Login
-							</Button>
+							   <Button type="submit" className="self-start disabled:bg-transparent disabled:cursor-not-allowed" disabled={pending}>
+                                Login
+								  </Button>
 						</form>
 					</Form>
 					<GoogleOAuthButton />

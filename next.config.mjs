@@ -16,10 +16,26 @@ const nextConfig = {
 			{
 				protocol: "https",
 				hostname: "images.pexels.com",
-			
+				port: '',
+				pathname: '/**',
+
+			},
+			{
+				protocol: "https",
+				hostname: "res.cloudinary.com",
+				port: '',
+				pathname: '/**',
+
+			},
+			{
+				protocol: "https",
+				hostname: "lh3.googleusercontent.com",
+				port: '',
+				pathname: '/**',
+
 			},
 		],
-		domains: ["lh3.googleusercontent.com", "anotherdomain.com"],
+
 		//both are correct way to do that , only hostname can also be user
 	},
 };

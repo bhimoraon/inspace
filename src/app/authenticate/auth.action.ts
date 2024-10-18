@@ -1,8 +1,6 @@
 "use server"
 
 import { never, z } from "zod"
-import { signUpSchema } from "./SignUpForm"
-import { signInSchema } from "./SignInForm";
 import { Argon2id } from "oslo/password"
 import { prisma } from "@/lib/prisma";
 import { lucia } from "@/lib/lucia";
@@ -11,7 +9,28 @@ import { redirect } from "next/navigation";
 import jwt from "jsonwebtoken"
 import { generateCodeVerifier, generateState } from "arctic";
 import { googleOAuthClient } from "@/lib/googleOAuthClient";
+import { signUpSchema } from "./SignUpForm";
+import { signInSchema } from "./SignInForm";
 
+
+
+export async function createSession(tokenData: { username: string, id: string }) {
+
+
+    const token = await jwt.sign(tokenData, process.env.TOKEN_SECRET!, {});
+    cookies().set("userInfo", token, { httpOnly: true, secure: process.env.NODE_ENV === "production" });
+
+    // successfully login
+    // session is created in the DataBase, with given user.id
+    const session = await lucia.createSession(tokenData.id, {});
+    // sessionCookie is created using name, session.id and attributes
+    const sessionCookie = await lucia.createSessionCookie(session.id);
+
+    // creating cookies in the browser sessionCookie is a object with keys name,
+    // value, and attributes. Here values is same as session.id
+    cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+    return { message: "Login successfull", success: true }
+}
 
 export const signUp = async (values: z.infer<typeof signUpSchema>) => {
 
@@ -31,37 +50,35 @@ export const signUp = async (values: z.infer<typeof signUpSchema>) => {
         const hashedPassword = await new Argon2id().hash(values.password)
 
         /// now create the user
+
+        let generatedUsername = values.email.split("@")[0];
+
+
+        while (await prisma.user.findUnique({
+            where: {
+                username: generatedUsername
+            }
+        })) {
+            generatedUsername = generatedUsername + Math.floor(Math.random() * 1000)
+        }
+
+
+
+
         const user = await prisma.user.create({
             data: {
 
-                email: values.email.toLowerCase(),
-                name: values.name,
+                email: values.email,
+                username: generatedUsername,
                 hashedPassword
-                // hashedPassword: values.password
+
             }
         });
-        const takenData = {
-            email: values.email,
-            name: values.name,
-            password: values.password
-
+        const tokenData = {
+            username: generatedUsername,
+            id: user.id
         }
-
-        try {
-            const token = await jwt.sign(takenData, "RohanKachhap", {});
-
-            cookies().set("userInfo", token, {
-                httpOnly: true,
-            });
-        } catch (error) {
-            console.error("Error signing JWT:", error);
-        }
-
-
-        const session = await lucia.createSession(user.id, {});
-        const sessionCookie = await lucia.createSessionCookie(session.id);
-        cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
-        return { message: "User created successfully", success: true };
+        return await createSession(tokenData);
 
 
     } catch (error) {
@@ -75,16 +92,29 @@ export const signUp = async (values: z.infer<typeof signUpSchema>) => {
 
 
 export const signIn = async (values: z.infer<typeof signInSchema>) => {
+    let user;
 
     try {
+        if (values.username.includes('@')) {
+
+            user = await prisma.user.findUnique({
+                where: {
+                    email: values.username
+                }
+            });
+
+        } else {
+
+            user = await prisma.user.findUnique({
+                where: {
+                    username: values.username
+                }
+            });
+        }
 
 
 
-        const user = await prisma.user.findUnique({
-            where: {
-                email: values.email.toLowerCase()
-            }
-        });
+
 
 
         if (!user || !user.hashedPassword) {
@@ -95,20 +125,14 @@ export const signIn = async (values: z.infer<typeof signInSchema>) => {
         if (!passwordMatch)
             return { message: "Invalid Credentials!", success: false };
 
-        const takenData = {
-            email: values.email,
-            name: user.name,
-            password: values.password
+        const tokenData = {
+            id: user.id,
+            username: user.username,
 
         }
-        const token = await jwt.sign(takenData, "RohanKachhap", {});
-        cookies().set("userInfo", token, { httpOnly: true });
 
-        // successfully login
-        const session = await lucia.createSession(user.id, {});
-        const sessionCookie = await lucia.createSessionCookie(session.id);
-        cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
-        return { message: "Login successfull", success: true }
+        return await createSession(tokenData);
+
 
     } catch (error: any) {
 
@@ -120,7 +144,15 @@ export const signIn = async (values: z.infer<typeof signInSchema>) => {
 }
 
 export const logout = async () => {
-    /// delete from database too
+    // deletion of session token from database
+    const sessionId = await cookies().get("session")!.value
+
+    await prisma.session.delete({
+        where: {
+            id: sessionId
+        }
+    })
+    // deletion of session token from cookies
     const sessionCookie = await lucia.createBlankSessionCookie()
     cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
@@ -132,6 +164,7 @@ export const logout = async () => {
 
 export const getGoogleOAuthConsenstUrl = async () => {
     try {
+        // generateState() and generateCodeVerifier are from arctic 
         const state = generateState()
         const codeVerifier = generateCodeVerifier();
         cookies().set("codeVerifier", codeVerifier, {
@@ -154,3 +187,5 @@ export const getGoogleOAuthConsenstUrl = async () => {
     }
 
 }
+
+

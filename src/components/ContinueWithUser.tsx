@@ -1,17 +1,26 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "./ui/button";
-import { signIn } from "@/app/authenticate/auth.action";
+import { createSession } from "@/app/authenticate/auth.action";
+import { toast } from "sonner";
 
-function CotinueWithUser({ userInfo }: any) {
+function CotinueWithUser({ tokenData }: any) {
+
 	return (
 		<Button
 			onClick={async () => {
-				await signIn(userInfo);
+				toast.success((await createSession(tokenData)).message)
+
+
 			}}
 			className="py-4"
 		>
-			Continue as {userInfo.name}
+			Continue as<pre className="text-blue-600 font-extrabold ">{" "}
+
+				@<span className="hover:underline">
+					{tokenData.username}
+				</span>
+			</pre>
 		</Button>
 	);
 }

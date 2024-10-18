@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import { logout } from "@/app/authenticate/auth.action";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,8 +15,9 @@ import {
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { goToProfile } from "@/lib/actions";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import {  useRouter } from "next/navigation";
 
 export function DropDownMenu(props: any) {
 	const router = useRouter();
@@ -42,7 +43,7 @@ export function DropDownMenu(props: any) {
 				<DropdownMenuGroup>
 					<DropdownMenuItem
 						onClick={() => {
-							router.push("/dashboard");
+							goToProfile();
 						}}
 					>
 						Profile
@@ -86,8 +87,9 @@ export function DropDownMenu(props: any) {
 				<DropdownMenuItem disabled>API</DropdownMenuItem>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem
-					onClick={() => {
-						logout();
+					onClick={async () => {
+						await logout();
+						router.push("/authenticate");
 					}}
 				>
 					Log out

@@ -6,16 +6,21 @@ import { Toaster } from "sonner";
 import { ThemeProvider} from "next-themes";
 
 const inter = Inter({ subsets: ["latin"] });
+
 export const metadata: Metadata = {
-	title: "Inspace",
+	title: {
+		template:"%s | Inspace",
+		default:"Inspace"
+	},
 	description: "Social media app built with Next.js",
 };
 
 export default function RootLayout({
 	children,
-}: Readonly<{
+}:{
 	children: React.ReactNode;
-}>) {
+}) {
+	
 	return (
 		<html lang="en" className="">
 			<body className={inter.className}>
@@ -32,8 +37,8 @@ export default function RootLayout({
 					{children}
 				</div>
 				</ThemeProvider>
-			</body>
 			<Toaster richColors />
+			</body>
 		</html>
 	);
 }

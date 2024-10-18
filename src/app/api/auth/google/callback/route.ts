@@ -1,78 +1,116 @@
 import { googleOAuthClient } from "@/lib/googleOAuthClient";
-import { lucia } from "@/lib/lucia";
+import { createSession } from "@/app/authenticate/auth.action";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { lucia } from "@/lib/lucia";
 
-export async function GET(req: NextRequest, res: Response) {
+export const dynamic = 'force-dynamic';
 
-    const url = req.nextUrl
-    const code = url.searchParams.get('code')
-    const state = url.searchParams.get('state')
-
+export async function GET(req: NextRequest) {
+  try {
+    const url = req.nextUrl;
+    const code = url.searchParams.get("code");
+    const state = url.searchParams.get("state");
 
     if (!code || !state) {
-        console.error('no code or state')
-        return new Response('Invalid Request', { status: 400 })
+      console.error("No code or state found in the URL.");
+      return NextResponse.json({ error: "Invalid Request: Missing OAuth parameters." }, { status: 400 });
     }
 
-    const codeVerifier = cookies().get('codeVerifier')?.value
-    const savedState = cookies().get('state')?.value
-
+    const codeVerifier = cookies().get("codeVerifier")?.value;
+    const savedState = cookies().get("state")?.value;
 
     if (!codeVerifier || !savedState) {
-        console.error('no code verifier or state')
-        return new Response('Invalid Request', { status: 400 })
+      console.error("No code verifier or state in cookies.");
+      return NextResponse.json({ error: "Invalid Request: Missing cookies." }, { status: 400 });
     }
-
-
 
     if (state !== savedState) {
-        console.error('State mismatch')
-        return new Response('Invalid Request in state', { status: 400 })
+      console.error("State mismatch.");
+      return NextResponse.json({ error: "Invalid Request: State mismatch." }, { status: 400 });
     }
-
 
     const { accessToken } = await googleOAuthClient.validateAuthorizationCode(code, codeVerifier);
-    const googleResponse = await fetch('https://www.googleapis.com/oauth2/v1/userinfo', {
-        headers: {
-            Authorization: `Bearer ${accessToken}`
-        }
-    })
+    const googleResponse = await fetch("https://www.googleapis.com/oauth2/v1/userinfo", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
     const googleData = (await googleResponse.json()) as {
-        id: string,
-        email: string,
-        name: string,
-        picture: string
-    }
+      id: string;
+      email: string;
+      name: string;
+      picture: string;
+    };
 
-    let userId: string = ''
-    // if the email exists in our record, we can create a cookie for them and sign them in
-    // if the email doesn't exist, we create a new user, then craete cookie to sign them in
+    let tokenData: { id: string; username: string };
 
-    const existingUser = await prisma.user.findUnique({
-        where: {
-            email: googleData.email
-        }
-    })
+    // Check if the user already exists
+    const existingUser = await prisma.user.findFirst({
+      where: { email: googleData.email },
+    });
+
     if (existingUser) {
-        userId = existingUser.id
+      tokenData = {
+        id: existingUser.id,
+        username: existingUser.username,
+      };
     } else {
-        const user = await prisma.user.create({
-            data: {
-                name: googleData.name,
-                email: googleData.email,
-                picture: googleData.picture
-            }
-        })
-        userId = user.id
+      let generatedUsername = googleData.email.split("@")[0] || "default_username";
+
+
+
+
+
+
+      if (!generatedUsername || generatedUsername === "") {
+        generatedUsername = "user" + Math.floor(Math.random() * 10000); // Fallback to avoid null/empty username
+      }
+
+      // Generate unique username
+      for (let i = 0; i < 10; i++) {
+        const isUsernameTaken = await prisma.user.findUnique({
+          where: { username: generatedUsername },
+        });
+
+        if (!isUsernameTaken) {
+          break;
+        }
+
+        // Corrected username generation logic
+        generatedUsername = `${generatedUsername}${Math.floor(Math.random() * 1000)}`;
+
+        if (i === 9) {
+          console.error("Failed to generate a unique username.");
+          return NextResponse.json({ error: "Username generation failed." }, { status: 500 });
+        }
+      }
+
+      const user = await prisma.user.create({
+        data: {
+          name: googleData.name,
+          username: generatedUsername,
+          email: googleData.email,
+          picture: googleData.picture,
+        },
+      });
+
+      tokenData = {
+        id: user.id,
+        username: user.username,
+      };
     }
 
-    const session = await lucia.createSession(userId, {})
-    const sessionCookie = await lucia.createSessionCookie(session.id)
-    cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes)
+    // Create session and set cookies securely
+    await createSession(tokenData);
 
-    return redirect("/")
+    console.log("working fine")
+    return NextResponse.redirect(process.env.DOMAIN!)
+  } catch (error) {
+    console.error("An error occurred during Google OAuth:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }

@@ -15,7 +15,6 @@ import {
 import {
 	Form,
 	FormControl,
-	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -26,11 +25,11 @@ import { signUp } from "./auth.action";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import GoogleOAuthButton from "@/components/GoogleOAuthButton";
+import { useFormStatus } from "react-dom";
 
 export const signUpSchema = z
 	.object({
-		name: z.string().min(2),
-		email: z.string().email(),
+		email: z.string().email().trim().toLowerCase(),
 		password: z.string().min(8),
 		confirmPassword: z.string().min(8),
 	})
@@ -41,11 +40,12 @@ export const signUpSchema = z
 
 function SignUpForm() {
 	const router = useRouter();
+	const { pending } = useFormStatus()
 	// 1. Define your form.
 	const form = useForm<z.infer<typeof signUpSchema>>({
 		resolver: zodResolver(signUpSchema),
 		defaultValues: {
-			name: "",
+
 			email: "",
 			password: "",
 			confirmPassword: "",
@@ -90,19 +90,7 @@ function SignUpForm() {
 									</FormItem>
 								)}
 							/>
-							<FormField
-								control={form.control}
-								name="name"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Name</FormLabel>
-										<FormControl>
-											<Input placeholder="Full name" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+
 
 							<FormField
 								control={form.control}
@@ -134,7 +122,7 @@ function SignUpForm() {
 										<FormControl>
 											<Input
 												type="password"
-												placeholder="Re-enter password"
+												placeholder="Confirm password"
 												{...field}
 												onChange={(e) => {
 													e.target.value = e.target.value.trim();
@@ -146,8 +134,8 @@ function SignUpForm() {
 									</FormItem>
 								)}
 							/>
-							<Button type="submit" className="self-start">
-								Sign Up
+							<Button type="submit" className="self-start" disabled={pending}>
+								{pending ? "pending..." : "Sign up"}
 							</Button>
 						</form>
 					</Form>

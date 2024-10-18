@@ -10,7 +10,7 @@ async function NavBar() {
 	const user = await getUser();
 
 	return (
-		<div className="flex fixed z-50  border-b-[1px] border-gray-600 shadow-sm bg-background h-16 px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 w-full   items-center justify-between  gap-20  ">
+		<div className="flex fixed z-50  border-b-[1px] border-gray-600 shadow-sm bg-background  h-16 px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 w-full   items-center justify-between  gap-20  ">
 			{/* LEFT */}
 			<div className="md:hidden lg:block w-[20%] flex gap-3 ">
 				<MobileMenu />
@@ -60,7 +60,10 @@ async function NavBar() {
 						<Image src="/stories.png" alt="Stories" width={16} height={16} />{" "}
 						<span>Stories</span>
 					</Link>
-					<Link href="/profile/harish" className="flex gap-2  items-center ">
+					<Link
+						href="/friends"
+						className="flex gap-2  items-center "
+					>
 						<Image src="/friends.png" alt="Friends" width={16} height={16} />{" "}
 						<span>Friends</span>
 					</Link>
@@ -100,7 +103,7 @@ async function NavBar() {
 					</>
 				) : (
 					<Link href="/authenticate">
-						<Button>Login/Register</Button>
+						<Button >Login/Register</Button>
 					</Link>
 				)}
 			</div>
