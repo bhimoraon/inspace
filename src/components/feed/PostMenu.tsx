@@ -14,7 +14,6 @@ import { Button } from "../ui/button";
 import { logout } from "@/app/authenticate/auth.action";
 
 export function PostMenu({ postId }: { postId: string }) {
-    const router = useRouter();
 
 
     return (
@@ -32,6 +31,7 @@ export function PostMenu({ postId }: { postId: string }) {
                 />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+
                 <DropdownMenuItem
                     onClick={async () => {
                          const res=  await fetch("/api/post",{

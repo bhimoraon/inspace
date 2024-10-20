@@ -13,7 +13,7 @@ async function NavBar() {
 		<div className="flex fixed z-50  border-b-[1px] border-gray-600 shadow-sm bg-background  h-16 px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 w-full   items-center justify-between  gap-20  ">
 			{/* LEFT */}
 			<div className="md:hidden lg:block w-[20%] flex gap-3 ">
-				<MobileMenu />
+				<MobileMenu user={user} />
 				<Link
 					href="/"
 					className="font-bold text-xl flex justify-center items-center text-black"

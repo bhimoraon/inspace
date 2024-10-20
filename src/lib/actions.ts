@@ -78,6 +78,7 @@ export async function acceptFollowRequest(userId: string) {
                 }
             })
         }
+        
         await prisma.follower.create({
             data: {
                 followerId: userId,
@@ -195,7 +196,7 @@ export async function postAction(data: string, imgUrl: string) {
 
     const user = await getUser();
     if (data === "" && imgUrl === "")
-        return
+        return null
     await prisma.post.create({
         data: {
             desc: data,
@@ -213,16 +214,16 @@ export async function postAction(data: string, imgUrl: string) {
 export async function createStory(img: any) {
 
     const user = await getUser();
-    
-    // await prisma.story.create({
-    //     data: {
-    //         img: img.secure_url,
-    //         userId: user!.id
 
-    //     }
-    // })
-    console.log(img)
+    await prisma.story.create({
+        data: {
+            img: img,
+            userId: user!.id,
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
 
+        }
+    })
     revalidatePath('/')
+
 
 }

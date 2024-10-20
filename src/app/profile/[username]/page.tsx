@@ -67,16 +67,16 @@ async function profilePage({ params, searchParams }: { params: { username: strin
 								<span className="text-sm">Posts</span>
 							</div>
 							<div className="flex flex-col items-center">
-								<span className="font-medium">{user._count.followers}</span>
+								<span className="font-medium">{user._count.followings}</span>
 								<span className="text-sm">Followers</span>
 							</div>
 							<div className="flex flex-col items-center">
-								<span className="font-medium">{user._count.followings}</span>
+								<span className="font-medium">{user._count.followers}</span>
 								<span className="text-sm">Following</span>
 							</div>
 						</div>
 					</div>
-					<AddPost />
+					<AddPost user={currentUser}/>
 					<Feed username={params.username} />
 
 				</div>

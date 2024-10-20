@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Button } from "../ui/button";
 import { postAction } from "@/lib/actions";
 import { CldUploadWidget } from "next-cloudinary";
-import { revalidatePath } from "next/cache";
+import ProcessingButton from "../rightMenu/ProcessingButton";
 
 function AddPost({ user }: any) {
 	const [data, setData] = useState('')
@@ -82,9 +82,10 @@ function AddPost({ user }: any) {
 						/>
 						Video
 					</div> */}
+					<form action={handleSubmit} className="absolute bottom-2 right-4">
 
-
-					<Button onClick={handleSubmit} className="absolute bottom-2 right-4">Post</Button>
+						<ProcessingButton process="Post" processing="Posting" />
+					</form>
 				</div>
 			</div>
 		</div>

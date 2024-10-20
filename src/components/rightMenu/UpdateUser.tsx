@@ -6,8 +6,9 @@ import Image from "next/image";
 import { CldUploadWidget } from "next-cloudinary"
 import { useActionState, useState } from "react";
 
-import UpdateButton from "./UpdateButton";
+import UpdateButton from "./ProcessingButton";
 import { toast } from "sonner";
+import ProcessingButton from "./ProcessingButton";
 
 const UpdateUser = ({ user }: { user: User }) => {
   const [open, setOpen] = useState(false);
@@ -31,13 +32,14 @@ const UpdateUser = ({ user }: { user: User }) => {
       {open && (
         <div className="absolute w-screen h-screen top-0 left-0 bg-black bg-opacity-65 flex items-center justify-center z-50 ">
           <form
-            action={async (formData)=>{await updateProfile(formData,cover?.secure_url);
+            action={async (formData) => {
+              await updateProfile(formData, cover?.secure_url);
               handleClose();
-             toast.success("success")
+              toast.success("success")
 
             }
-          }
-            
+            }
+
             className="p-12 bg-slate-600 rounded-lg shadow-md flex flex-col gap-2 w-full md:w-1/2 xl:w-1/3 relative"
           >
             {/* TITLE */}
@@ -79,17 +81,17 @@ const UpdateUser = ({ user }: { user: User }) => {
               {/* INPUT */}
               <div className="flex flex-col gap-4">
                 <label htmlFor="" className="text-xs text-gray-500">
-                 Name
+                  Name
                 </label>
                 <input
                   type="text"
                   placeholder={user.name || "John"}
                   className="ring-1 ring-gray-300 p-[13px] rounded-md text-sm"
-                  name="name"  
-                 
+                  name="name"
+
                 />
               </div>
-             
+
               {/* INPUT */}
               <div className="flex flex-col gap-4">
                 <label htmlFor="" className="text-xs text-gray-500">
@@ -154,8 +156,8 @@ const UpdateUser = ({ user }: { user: User }) => {
                 />
               </div>
             </div>
-            <UpdateButton/>
-        
+            <ProcessingButton process="Update" processing="Updating"/>
+
             <div
               className="absolute text-xl right-2 top-3 cursor-pointer"
               onClick={handleClose}
